@@ -1,0 +1,68 @@
+from sqlalchemy import create_engine
+from database.models import User, UserCreate, Url, UrlCreate
+from database.config import DATABASE_URL
+from sqlalchemy.orm import Session
+import logging, uuid
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
+
+engine = create_engine(DATABASE_URL)
+
+def create_user(*, session: Session, user_create: UserCreate) -> User:
+    try:
+        user = User(
+            name = user_create.name
+        )
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        log.info(f"User {user} was created")
+        return user
+    except Exception as e:
+        log.error(f"Exception while creating user", e)
+        session.rollback() 
+        
+def delete_user(*, session: Session, user_id: uuid):
+    try:
+        user = session.query(User).filter_by(id=user_id).first()
+        
+        if user:
+            session.delete(user)
+            session.commit()
+            log.info(f"User with id = {user_id} was deleted")
+        else:
+            log.warning(f"User with id = {user_id} not found")
+    except Exception as e:
+        log.error(f"Exception while deleting user with id = {user_id}", e)
+        session.rollback()
+        
+def create_url(*, session: Session, url_create: UrlCreate) -> Url:
+    try:
+        url = Url(
+            full_url = url_create.full_url,
+            short_url = url_create.short_url,
+            user_id = url_create.user_id
+        )
+        session.add(url)
+        session.commit()
+        session.refresh(url)
+        log.info(f"Url {url} was created")
+        return url
+    except Exception as e:
+        log.error(f"Exception while creating url", e)
+        session.rollback() 
+        
+def delete_url(*, session: Session, url_id: uuid):
+    try:
+        url = session.query(Url).filter_by(id=url_id).first()
+        
+        if url:
+            session.delete(url)
+            session.commit()
+            log.info(f"Url with id = {url_id} was deleted")
+        else:
+            log.warning(f"Url with id = {url_id} not found")
+    except Exception as e:
+        log.error(f"Exception while deleting url with id = {url_id}", e)
+        session.rollback() 
