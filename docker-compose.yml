@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  urlshortener:
+    container_name: urlshortener
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: hse_python_hw3
+    # restart: unless-stopped
+
+  db:
+    image: postgres:16
+    container_name: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hse_python_hw3
+    ports:
+      - "55432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+    driver: local
