@@ -1,3 +1,35 @@
-from fastapi import APIRouter
+from uuid import UUID
+from fastapi import APIRouter, Query
+from database.models import Url, UrlCreate
+from database.database import delete_url, engine, get_urls
+from sqlalchemy.orm import sessionmaker
+from database.database import create_url
 
 router = APIRouter(prefix="/urls", tags=["urls"])
+
+@router.post("/", response_model=None)
+def create_url_endpoint(url_create: UrlCreate) -> Url:
+    """
+    Create url
+    """
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    return create_url(session=session, url_create=url_create)
+
+@router.delete("/{id}", response_model=None)
+def delete_url_endpoint(id: UUID) -> Url:
+    """
+    Delete url
+    """
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    return delete_url(session=session, url_id=id)
+
+@router.get("/", response_model=None)
+def get_url_endpoint(ids: list = Query(None), full_url: str = Query(None)) -> Url:
+    """
+    Get urls by filters
+    """
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    return get_urls(session=session, ids=ids, full_url=full_url)

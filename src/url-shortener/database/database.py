@@ -66,3 +66,15 @@ def delete_url(*, session: Session, url_id: uuid):
     except Exception as e:
         log.error(f"Exception while deleting url with id = {url_id}", e)
         session.rollback() 
+        
+def get_urls(*, session: Session, ids: list, full_url: str) -> list:
+    try:
+        query = session.query(Url)
+        if ids:
+            query = query.filter(Url.id.in_(ids))
+        if full_url:
+            query = query.filter(Url.full_url == full_url)
+        return query.all()
+    except Exception as e:
+        log.error(f"Exception while getting urls", e)
+        session.rollback() 
