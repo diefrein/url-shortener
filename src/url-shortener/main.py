@@ -7,9 +7,12 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 def init_db():
-    log.info("Creating initial data")
-    create_user(session=sessionmaker(bind=engine), user_create=UserCreate("test user"))
-    log.info("Creating initial data")
+   log.info("Creating initial data")
+   Session = sessionmaker(bind=engine)
+
+   session = Session()
+   create_user(session=session, user_create=UserCreate("test user"))
+   log.info("Creating initial data")
     
 if __name__ == "__main__":
    init_db()
