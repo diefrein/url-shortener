@@ -3,6 +3,7 @@ from database.models import User, UserCreate, Url, UrlCreate
 from database.config import DATABASE_URL
 from sqlalchemy.orm import Session
 import logging, uuid
+from urlgenerator.generator import generate_short_url
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -39,9 +40,10 @@ def delete_user(*, session: Session, user_id: uuid):
         
 def create_url(*, session: Session, url_create: UrlCreate) -> Url:
     try:
+        short_url = generate_short_url(full_url=url_create.full_url)
         url = Url(
             full_url = url_create.full_url,
-            short_url = url_create.short_url,
+            short_url = short_url,
             user_id = url_create.user_id
         )
         session.add(url)
@@ -67,13 +69,13 @@ def delete_url(*, session: Session, url_id: uuid):
         log.error(f"Exception while deleting url with id = {url_id}", e)
         session.rollback() 
         
-def get_urls(*, session: Session, ids: list, full_url: str) -> list:
+def get_urls(*, session: Session, ids: list = None, short_url: str = None) -> list:
     try:
         query = session.query(Url)
         if ids:
             query = query.filter(Url.id.in_(ids))
-        if full_url:
-            query = query.filter(Url.full_url == full_url)
+        if short_url:
+            query = query.filter(Url.short_url == short_url)
         return query.all()
     except Exception as e:
         log.error(f"Exception while getting urls", e)

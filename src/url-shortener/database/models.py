@@ -23,5 +23,4 @@ class Url(Base):
     
 class UrlCreate(BaseModel):
     full_url: str = Field(None)
-    short_url: str = Field(None)
     user_id: UUID_BASE = Field(None)
