@@ -24,7 +24,7 @@ create_urls_native_sql = """
                 user_id uuid not null)
             """
 
-update_urls_native_sql = """
+alter_urls_native_sql = """
             alter table urls add column if not exists created_at timestamp not null default now();
             alter table urls add column if not exists latest_used_at timestamp;
             alter table urls add column if not exists times_used integer not null default 0;
@@ -37,8 +37,13 @@ def run_migrations():
     try:
         session.execute(text(create_users_native_sql))
         log.info("Created users table")
+        
         session.execute(text(create_urls_native_sql))
         log.info("Created urls table")
+        
+        session.execute(text(alter_urls_native_sql))
+        log.info("Altered urls table")
+        
         session.commit()
     except Exception as e:
         log.error(f"Exception while applying migrations", e)
