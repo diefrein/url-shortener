@@ -4,6 +4,7 @@ from database.config import DATABASE_URL
 from sqlalchemy.orm import Session, sessionmaker
 import logging, uuid
 from urlgenerator.generator import generate_short_url
+from datetime import datetime
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -24,14 +25,26 @@ create_urls_native_sql = """
                 user_id uuid not null)
             """
 
+alter_urls_native_sql = """
+            alter table urls add column if not exists created_at timestamp not null default now();
+            alter table urls add column if not exists latest_used_at timestamp;
+            alter table urls add column if not exists times_used integer not null default 0;
+            alter table urls add column if not exists expires_at timestamp;
+            """
+
 def run_migrations():
     Session = sessionmaker(bind=engine)
     session = Session()
     try:
         session.execute(text(create_users_native_sql))
         log.info("Created users table")
+        
         session.execute(text(create_urls_native_sql))
         log.info("Created urls table")
+        
+        session.execute(text(alter_urls_native_sql))
+        log.info("Altered urls table")
+        
         session.commit()
     except Exception as e:
         log.error(f"Exception while applying migrations", e)
@@ -71,7 +84,9 @@ def create_url(*, session: Session, url_create: UrlCreate) -> Url:
         url = Url(
             full_url = url_create.full_url,
             short_url = short_url,
-            user_id = url_create.user_id
+            user_id = url_create.user_id,
+            created_at = datetime.now(),
+            expires_at = url_create.expires_at
         )
         session.add(url)
         session.commit()
