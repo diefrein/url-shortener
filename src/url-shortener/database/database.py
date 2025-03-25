@@ -24,6 +24,13 @@ create_urls_native_sql = """
                 user_id uuid not null)
             """
 
+update_urls_native_sql = """
+            alter table urls add column if not exists created_at timestamp not null default now();
+            alter table urls add column if not exists latest_used_at timestamp;
+            alter table urls add column if not exists times_used integer not null default 0;
+            alter table urls add column if not exists expires_at timestamp;
+            """
+
 def run_migrations():
     Session = sessionmaker(bind=engine)
     session = Session()
