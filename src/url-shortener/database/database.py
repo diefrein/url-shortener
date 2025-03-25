@@ -4,6 +4,7 @@ from database.config import DATABASE_URL
 from sqlalchemy.orm import Session, sessionmaker
 import logging, uuid
 from urlgenerator.generator import generate_short_url
+from datetime import datetime
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -83,7 +84,9 @@ def create_url(*, session: Session, url_create: UrlCreate) -> Url:
         url = Url(
             full_url = url_create.full_url,
             short_url = short_url,
-            user_id = url_create.user_id
+            user_id = url_create.user_id,
+            created_at = datetime.now(),
+            expires_at = url_create.expires_at
         )
         session.add(url)
         session.commit()
