@@ -1,7 +1,5 @@
 import logging
-from database.database import create_user, engine
-from database.models import UserCreate
-from sqlalchemy.orm import sessionmaker
+from database.database import run_migrations
 from fastapi import FastAPI
 from api.routes.urls import router as url_router
 import uvicorn, os
@@ -15,12 +13,7 @@ app = FastAPI(
 app.include_router(url_router, prefix='/api/v1')
 
 def init_db():
-   log.info("Creating initial data")
-   Session = sessionmaker(bind=engine)
-   session = Session()
-   
-   create_user(session=session, user_create=UserCreate(name="test user"))
-   log.info("Creating initial data")
+   run_migrations()
     
 if __name__ == "__main__":
    init_db()
