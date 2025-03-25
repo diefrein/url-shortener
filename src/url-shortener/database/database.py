@@ -1,7 +1,7 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from database.models import User, UserCreate, Url, UrlCreate
 from database.config import DATABASE_URL
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 import logging, uuid
 from urlgenerator.generator import generate_short_url
 
@@ -9,6 +9,33 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 engine = create_engine(DATABASE_URL)
+
+create_users_native_sql =  """
+            create table if not exists users(
+                id uuid primary key default gen_random_uuid(), 
+                name varchar not null)
+            """
+
+create_urls_native_sql = """
+            create table if not exists urls(
+                id uuid primary key default gen_random_uuid(), 
+                full_url varchar not null, 
+                short_url varchar not null, 
+                user_id uuid not null)
+            """
+
+def run_migrations():
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    try:
+        session.execute(text(create_users_native_sql))
+        log.info("Created users table")
+        session.execute(text(create_urls_native_sql))
+        log.info("Created urls table")
+        session.commit()
+    except Exception as e:
+        log.error(f"Exception while applying migrations", e)
+        session.rollback()  
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
     try:
