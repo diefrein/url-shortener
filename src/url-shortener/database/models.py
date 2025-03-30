@@ -30,3 +30,12 @@ class UrlCreate(BaseModel):
     full_url: str = Field(None)
     user_id: UUID_BASE = Field(None)
     expires_at: datetime = Field(None)
+    custom_alias: str = Field(None)
+    
+class UrlStatistics(BaseModel):
+    full_url: str = Field(None)
+    times_used: int = Field(None)
+    created_at: datetime = Field(None)
+    latest_used_at: datetime = Field(None)
+    expires_at: datetime = Field(None)
+    
