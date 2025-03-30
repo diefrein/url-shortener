@@ -5,7 +5,7 @@ from database.database import *
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-def remove_expired_urls():
+def remove_expired_urls_scheduled_task():
     log.info("Started scheduled task (remove_expired_urls)")
     
     Session = sessionmaker(bind=engine)

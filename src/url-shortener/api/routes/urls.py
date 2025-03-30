@@ -108,7 +108,11 @@ def _get_single_url(session: Session, short_url: str) -> Url:
         log.error(f"No url found for short_url = {short_url}")
         raise RuntimeError("No url found for given short one")
     elif (size == 1):
-        return urls[0]
+        url = urls[0]
+        if datetime.now() >= url.expires_at:
+            log.error(f"Short url with id = {url.id} is expired")
+            raise RuntimeError("Short url is expired")
+        return url
     else:
         log.error(f"More then one url found for short_url = {short_url}")
         raise RuntimeError("More then one url found")
