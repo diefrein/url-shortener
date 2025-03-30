@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, text
-from database.models import User, UserCreate, Url, UrlCreate
+from database.models import *
 from database.config import DATABASE_URL
 from sqlalchemy.orm import Session, sessionmaker
 import logging, uuid
@@ -97,6 +97,17 @@ def create_url(*, session: Session, url_create: UrlCreate) -> Url:
         log.error(f"Exception while creating url", e)
         session.rollback() 
         
+def create_url(*, session: Session, url: Url) -> Url:
+    try:
+        session.add(url)
+        session.commit()
+        session.refresh(url)
+        log.info(f"Url {url} was created")
+        return url
+    except Exception as e:
+        log.error(f"Exception while creating url", e)
+        session.rollback() 
+        
 def delete_url(*, session: Session, url_id: uuid):
     try:
         url = session.query(Url).filter_by(id=url_id).first()
@@ -111,13 +122,15 @@ def delete_url(*, session: Session, url_id: uuid):
         log.error(f"Exception while deleting url with id = {url_id}", e)
         session.rollback() 
         
-def get_urls(*, session: Session, ids: list = None, short_url: str = None) -> list:
+def get_urls(*, session: Session, ids: list = None, short_url: str = None, full_url: str = None) -> list:
     try:
         query = session.query(Url)
         if ids:
             query = query.filter(Url.id.in_(ids))
         if short_url:
             query = query.filter(Url.short_url == short_url)
+        if full_url:
+            query = query.filter(Url.full_url == full_url)
         return query.all()
     except Exception as e:
         log.error(f"Exception while getting urls", e)

@@ -3,8 +3,8 @@ from fastapi import APIRouter, Query
 from database.models import Url, UrlCreate, UrlStatistics
 from database.database import *
 from sqlalchemy.orm import sessionmaker
-from database.database import create_url
 from fastapi.responses import RedirectResponse, PlainTextResponse
+from urlgenerator.generator import generate_short_url
 
 router = APIRouter(prefix="/links", tags=["urls"])
 
@@ -15,7 +15,35 @@ def create_url_endpoint(url_create: UrlCreate) -> Url:
     """
     Session = sessionmaker(bind=engine)
     session = Session()
-    return create_url(session=session, url_create=url_create)
+    
+    short_url = generate_short_url(full_url=url_create.full_url)
+    url = Url(
+        full_url = url_create.full_url,
+        short_url = short_url,
+        user_id = url_create.user_id,
+        created_at = datetime.now(),
+        expires_at = url_create.expires_at
+    )
+    
+    return create_url(session=session, url=url)
+
+@router.post("/shorten", response_model=None)
+def create_url_endpoint(url_create: UrlCreateWithAlias) -> Url:
+    """
+    Create url with custom alias
+    """
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    
+    url = Url(
+        full_url = url_create.full_url,
+        short_url = url_create.custom_alias,
+        user_id = url_create.user_id,
+        created_at = datetime.now(),
+        expires_at = url_create.expires_at
+    )
+    
+    return create_url(session=session, url=url)
 
 @router.delete("/{id}", response_model=None)
 def delete_url_endpoint(id: UUID) -> Url:
@@ -26,14 +54,14 @@ def delete_url_endpoint(id: UUID) -> Url:
     session = Session()
     return delete_url(session=session, url_id=id)
 
-@router.get("/", response_model=None)
-def get_url_endpoint(ids: list = Query(None), short_url: str = Query(None)) -> Url:
+@router.get("/search", response_model=None)
+def get_url_endpoint(ids: list = Query(None), short_url: str = Query(None), origin_url: str = Query(None)) -> Url:
     """
     Get urls by filters
     """
     Session = sessionmaker(bind=engine)
     session = Session()
-    return get_urls(session=session, ids=ids, short_url=short_url)
+    return get_urls(session=session, ids=ids, short_url=short_url, full_url=origin_url)
 
 @router.get("/{short_url}", response_model=None)
 def get_url_endpoint(short_url: str) -> Url:
