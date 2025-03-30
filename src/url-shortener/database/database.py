@@ -111,6 +111,21 @@ def delete_url(*, session: Session, url_id: uuid):
         log.error(f"Exception while deleting url with id = {url_id}", e)
         session.rollback() 
         
+def delete_short_url(*, session: Session, short_url: str):
+    try:
+        url = session.query(Url).filter_by(short_url=short_url).first()
+        url.short_url = None
+        if url:
+            session.add(url)
+            session.commit()
+            session.refresh(url)    
+            log.info(f"Short url was deleted for Url with id = {url.id}")
+        else:
+            log.warning(f"Url with short_url = {short_url} not found")
+    except Exception as e:
+        log.error(f"Exception while deleting short_url = {short_url}", e)
+        session.rollback() 
+        
 def get_urls(*, session: Session, ids: list = None, short_url: str = None) -> list:
     try:
         query = session.query(Url)
@@ -121,4 +136,19 @@ def get_urls(*, session: Session, ids: list = None, short_url: str = None) -> li
         return query.all()
     except Exception as e:
         log.error(f"Exception while getting urls", e)
-        session.rollback() 
+        session.rollback()
+        
+def update_url_use_count(*, session: Session, url_id: uuid):
+    try:
+        session.execute(
+            text(
+                f"""
+                update urls set times_used = times_used + 1, latest_used_at = now() where id = {url_id}
+                """
+            )
+        )
+        session.commit()
+        log.info(f"Updated url use count for url with id = {url_id}")
+    except Exception as e:
+        log.error(f"Exception while updating url use count for url with id = {url_id}", e)
+        session.rollback()
