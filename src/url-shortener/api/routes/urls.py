@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import APIRouter, Query
 from database.models import Url, UrlCreate, UrlStatistics
-from database.database import delete_url, engine, get_urls, delete_short_url, update_url_use_count
+from database.database import *
 from sqlalchemy.orm import sessionmaker
 from database.database import create_url
 from fastapi.responses import RedirectResponse, PlainTextResponse
@@ -42,16 +42,10 @@ def get_url_endpoint(short_url: str) -> Url:
     """
     Session = sessionmaker(bind=engine)
     session = Session()
-    urls = get_urls(session=session, short_url=short_url)
-    size = len(urls)
-    if (size < 1):
-        return PlainTextResponse(content="No url found for given short one", status_code=400)
-    elif (size == 1):
-        url = urls[0]
-        update_url_use_count(session=session, url_id=url.id)
-        return RedirectResponse(url=url.full_url, status_code=307)
-    else:
-        return PlainTextResponse(content="More then one url found, please use the original one", status_code=400)
+    
+    url = _get_single_url(session=session, short_url=short_url)
+    update_url_use_count(session=session, url_id=url.id)
+    return RedirectResponse(url=url.full_url, status_code=307)
 
 @router.delete("/{short_url}", response_model=None)
 def delete_short_url_endpoint(short_url: str) -> Url:
@@ -61,26 +55,52 @@ def delete_short_url_endpoint(short_url: str) -> Url:
     Session = sessionmaker(bind=engine)
     session = Session()
     
-    return delete_short_url(session=session, short_url=short_url)
+    try:
+        url = _get_single_url(session=session, short_url=short_url)
+        url.short_url = None
+        return update_url(session=session, url=url)
+    except Exception as e:
+        return PlainTextResponse(e)
 
-@router.get("/{short_url}/stats", response_model=None)
-def get_url_endpoint(short_url: str) -> UrlStatistics:
+@router.put("/{short_url}", response_model=None)
+def delete_short_url_endpoint(short_url: str, new_short_url: str) -> Url:
+    """
+    Update short url
+    """
     Session = sessionmaker(bind=engine)
     session = Session()
     
+    try:
+        url = _get_single_url(session=session, short_url=short_url)
+        url.short_url = new_short_url
+        return update_url(session=session, url=url)
+    except Exception as e:
+        return PlainTextResponse(e)
+
+@router.get("/{short_url}/stats", response_model=None)
+def get_url_endpoint(short_url: str) -> UrlStatistics:
+    
+    try:
+        url = _get_single_url(short_url=short_url)
+        return UrlStatistics(
+                full_url=url.full_url,
+                times_used=url.times_used,
+                created_at=url.created_at,
+                latest_used_at=url.latest_used_at,
+                expires_at=url.expires_at
+            )
+    except Exception as e:
+        return PlainTextResponse(e)
+    
+def _get_single_url(session: Session, short_url: str) -> Url:
     urls = get_urls(session=session, short_url=short_url)
     size = len(urls)
     
     if (size < 1):
-        return PlainTextResponse(content="No url found for given short one", status_code=400)
+        log.error(f"No url found for short_url = {short_url}")
+        raise RuntimeError("No url found for given short one")
     elif (size == 1):
-        url = urls[0]
-        return UrlStatistics(
-            full_url=url.full_url,
-            times_used=url.times_used,
-            created_at=url.created_at,
-            latest_used_at=url.latest_used_at,
-            expires_at=url.expires_at
-        )
+        return urls[0]
     else:
-        return PlainTextResponse(content="More then one url found, please use the original one", status_code=400)
+        log.error(f"More then one url found for short_url = {short_url}")
+        raise RuntimeError("More then one url found")
