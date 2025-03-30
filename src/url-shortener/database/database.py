@@ -160,3 +160,16 @@ def update_url(*, session: Session, url: Url) -> Url:
     except Exception as e:
         log.error(f"Exception while updating with id = {url.id}", e)
         session.rollback()
+        
+def remove_expired_urls(*, session: Session):
+    try:
+        session.execute(text(
+            f"""
+            delete from urls where expires_at is not null and now() >= expires_at
+            """
+        ))
+        session.commit()
+        log.info(f"Deleted expired urls")
+    except Exception as e:
+        log.error(f"Exception while deleting expired urls", e)
+        session.rollback()
