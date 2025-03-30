@@ -141,7 +141,7 @@ def update_url_use_count(*, session: Session, url_id: uuid):
         session.execute(
             text(
                 f"""
-                update urls set times_used = times_used + 1, latest_used_at = now() where id = {url_id}
+                update urls set times_used = times_used + 1, latest_used_at = now() where id = '{url_id}'
                 """
             )
         )

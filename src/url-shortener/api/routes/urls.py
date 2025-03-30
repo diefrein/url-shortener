@@ -1,4 +1,3 @@
-from uuid import UUID
 from fastapi import APIRouter, Query
 from database.models import Url, UrlCreate, UrlStatistics
 from database.database import *
@@ -16,7 +15,11 @@ def create_url_endpoint(url_create: UrlCreate) -> Url:
     Session = sessionmaker(bind=engine)
     session = Session()
     
-    short_url = generate_short_url(full_url=url_create.full_url)
+    short_url = url_create.custom_alias
+    if url_create.custom_alias is None:
+        short_url = generate_short_url(full_url=url_create.full_url)
+    else:
+        short_url = url_create.custom_alias
     url = Url(
         full_url = url_create.full_url,
         short_url = short_url,
@@ -26,33 +29,6 @@ def create_url_endpoint(url_create: UrlCreate) -> Url:
     )
     
     return create_url(session=session, url=url)
-
-@router.post("/shorten", response_model=None)
-def create_url_endpoint(url_create: UrlCreateWithAlias) -> Url:
-    """
-    Create url with custom alias
-    """
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    
-    url = Url(
-        full_url = url_create.full_url,
-        short_url = url_create.custom_alias,
-        user_id = url_create.user_id,
-        created_at = datetime.now(),
-        expires_at = url_create.expires_at
-    )
-    
-    return create_url(session=session, url=url)
-
-@router.delete("/{id}", response_model=None)
-def delete_url_endpoint(id: UUID) -> Url:
-    """
-    Delete url
-    """
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    return delete_url(session=session, url_id=id)
 
 @router.get("/search", response_model=None)
 def get_url_endpoint(ids: list = Query(None), short_url: str = Query(None), origin_url: str = Query(None)) -> Url:
@@ -76,7 +52,7 @@ def get_url_endpoint(short_url: str) -> Url:
     return RedirectResponse(url=url.full_url, status_code=307)
 
 @router.delete("/{short_url}", response_model=None)
-def delete_short_url_endpoint(short_url: str) -> Url:
+def delete_short_url_endpoint(short_url: str):
     """
     Delete short url
     """
@@ -85,8 +61,7 @@ def delete_short_url_endpoint(short_url: str) -> Url:
     
     try:
         url = _get_single_url(session=session, short_url=short_url)
-        url.short_url = None
-        return update_url(session=session, url=url)
+        delete_url(session=session, url_id=url.id)
     except Exception as e:
         return PlainTextResponse(e)
 
@@ -106,10 +81,15 @@ def delete_short_url_endpoint(short_url: str, new_short_url: str) -> Url:
         return PlainTextResponse(e)
 
 @router.get("/{short_url}/stats", response_model=None)
-def get_url_endpoint(short_url: str) -> UrlStatistics:
+def get_url_stats_endpoint(short_url: str) -> UrlStatistics:
+    """
+    Get url statistics 
+    """
+    Session = sessionmaker(bind=engine)
+    session = Session()
     
     try:
-        url = _get_single_url(short_url=short_url)
+        url = _get_single_url(session=session, short_url=short_url)
         return UrlStatistics(
                 full_url=url.full_url,
                 times_used=url.times_used,
