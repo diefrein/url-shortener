@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, sessionmaker
 import logging, uuid
 from urlgenerator.generator import generate_short_url
 from datetime import datetime
-from caching.custom_cache import cache_query
+from caching.custom_cache import cache_query, invalidate_cache
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -79,6 +79,7 @@ def delete_user(*, session: Session, user_id: uuid):
         log.error(f"Exception while deleting user with id = {user_id}", e)
         session.rollback()
         
+@invalidate_cache(pattern='get_urls*')
 def create_url(*, session: Session, url_create: UrlCreate) -> Url:
     try:
         short_url = generate_short_url(full_url=url_create.full_url)
@@ -98,6 +99,7 @@ def create_url(*, session: Session, url_create: UrlCreate) -> Url:
         log.error(f"Exception while creating url", e)
         session.rollback() 
         
+@invalidate_cache(pattern='get_urls*')
 def create_url(*, session: Session, url: Url) -> Url:
     try:
         session.add(url)
@@ -109,6 +111,7 @@ def create_url(*, session: Session, url: Url) -> Url:
         log.error(f"Exception while creating url", e)
         session.rollback() 
         
+@invalidate_cache(pattern='get_urls*')
 def delete_url(*, session: Session, url_id: uuid):
     try:
         url = session.query(Url).filter_by(id=url_id).first()
@@ -138,6 +141,7 @@ def get_urls(*, session: Session, ids: list = None, short_url: str = None, full_
         log.error(f"Exception while getting urls", e)
         session.rollback()
         
+@invalidate_cache(pattern='get_urls*')
 def update_url_use_count(*, session: Session, url_id: uuid):
     try:
         session.execute(
@@ -153,6 +157,7 @@ def update_url_use_count(*, session: Session, url_id: uuid):
         log.error(f"Exception while updating url use count for url with id = {url_id}", e)
         session.rollback()
         
+@invalidate_cache(pattern='get_urls*')
 def update_url(*, session: Session, url: Url) -> Url:
     try:
         session.add(url)
@@ -163,6 +168,7 @@ def update_url(*, session: Session, url: Url) -> Url:
         log.error(f"Exception while updating with id = {url.id}", e)
         session.rollback()
         
+@invalidate_cache(pattern='get_urls*')
 def remove_expired_urls(*, session: Session):
     try:
         session.execute(text(
