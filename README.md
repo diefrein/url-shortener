@@ -120,7 +120,7 @@ curl -X 'GET' \
   -H 'accept: application/json'
 
 
-## Инструкцию по запуску:
+## Инструкция по запуску:
 
 1. Установить Git, Docker
    
