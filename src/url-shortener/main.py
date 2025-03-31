@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     
 def get_scheduler():
    scheduler = BackgroundScheduler()
-   scheduler.add_job(remove_expired_urls_scheduled_task, 'interval', seconds=10)
+   scheduler.add_job(remove_expired_urls_scheduled_task, 'interval', seconds=int(os.getenv('REMOVE_EXPIRED_URLS_INTERVAL_SECONDS', 10)))
    return scheduler
 
 app = FastAPI(
