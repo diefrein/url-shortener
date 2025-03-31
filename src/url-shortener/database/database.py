@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, sessionmaker
 import logging, uuid
 from urlgenerator.generator import generate_short_url
 from datetime import datetime
+from caching.custom_cache import cache_query
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -122,6 +123,7 @@ def delete_url(*, session: Session, url_id: uuid):
         log.error(f"Exception while deleting url with id = {url_id}", e)
         session.rollback() 
         
+@cache_query()
 def get_urls(*, session: Session, ids: list = None, short_url: str = None, full_url: str = None) -> list:
     try:
         query = session.query(Url)
