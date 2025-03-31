@@ -4,6 +4,12 @@
 Требования: https://colab.research.google.com/drive/1_XpbChwNfdSu0k2cBItKDfAX3YOWxU3S?usp=sharing
 
 
+Основной функционал:
+1. Ручки для создания/обновления/получения коротких ссылок
+2. Кеширование GET запросов к БД
+3. Удаление просроченных ссылок шедулером
+
+
 **API:**
 
 1. POST /api/v1/links/shorten
