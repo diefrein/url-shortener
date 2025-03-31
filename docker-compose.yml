@@ -7,6 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
+      REMOVE_EXPIRED_URLS_INTERVAL_SECONDS: 600
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_HOST: db
