@@ -4,13 +4,13 @@
 Требования: https://colab.research.google.com/drive/1_XpbChwNfdSu0k2cBItKDfAX3YOWxU3S?usp=sharing
 
 
-**Основной функционал:**
+## Основной функционал:
 1. Ручки для создания/обновления/получения коротких ссылок
 2. Кеширование GET запросов к БД
 3. Удаление просроченных ссылок шедулером
 
 
-**API:**
+## API:
 
 1. POST /api/v1/links/shorten
    
@@ -120,7 +120,7 @@ curl -X 'GET' \
   -H 'accept: application/json'
 
 
-**Инструкцию по запуску:**
+## Инструкцию по запуску:
 
 1. Установить Git, Docker
    
@@ -129,7 +129,7 @@ curl -X 'GET' \
 5. Выполнить docker compose up -d
    
 
-**Описание БД:**
+## Описание БД:
 
 1. Таблица urls
    
