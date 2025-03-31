@@ -32,6 +32,10 @@ alter_urls_native_sql = """
             alter table urls add column if not exists times_used integer not null default 0;
             alter table urls add column if not exists expires_at timestamp;
             """
+            
+create_unique_index_sql = """
+            create unique index if not exists short_url_uidx on urls(short_url);
+            """
 
 def run_migrations():
     Session = sessionmaker(bind=engine)
@@ -45,6 +49,9 @@ def run_migrations():
         
         session.execute(text(alter_urls_native_sql))
         log.info("Altered urls table")
+        
+        session.execute(text(create_unique_index_sql))
+        log.info("Created unique index")
         
         session.commit()
     except Exception as e:
